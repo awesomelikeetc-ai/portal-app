@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Клубный Портал</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --card: #151b26;
+      --card-border: #1f293a;
+      --accent: #00a8ff;
+      --accent-dark: #0077b6;
+      --text: #f0f4f8;
+      --text-muted: #8b9bb4;
+      --danger: #ff4757;
+      --success: #2ed573;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; padding-bottom: 40px; -webkit-tap-highlight-color: transparent; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .header h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .back-btn { background: var(--card); border: 1px solid var(--card-border); color: var(--accent); padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: none; }
+    .screen { display: none; animation: fadeIn 0.2s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Карточки и сетка */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tile { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; cursor: pointer; transition: 0.15s; }
+    .tile:active { transform: scale(0.97); border-color: var(--accent); }
+    .tile-icon { font-size: 26px; color: var(--accent); }
+    .tile-title { font-size: 15px; font-weight: 600; line-height: 1.2; }
+    
+    .club-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .club-card.disabled { opacity: 0.5; cursor: not-allowed; }
+    .badge { background: rgba(0, 168, 255, 0.15); color: var(--accent); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+
+    /* Инпуты и кнопки */
+    input, textarea, select { width: 100%; background: var(--card); border: 1px solid var(--card-border); color: var(--text); padding: 14px; border-radius: 12px; font-size: 15px; margin-bottom: 12px; outline: none; }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    .btn { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    .btn:disabled { opacity: 0.5; }
+    .btn-danger { background: var(--danger); }
+
+    /* Списки и счетчики */
+    .list-item { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+    .list-item h3 { font-size: 16px; margin-bottom: 6px; color: var(--accent); }
+    .list-item p { font-size: 14px; color: var(--text-muted); white-space: pre-line; line-height: 1.4; }
+    
+    .row-flex { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .counter { display: flex; align-items: center; gap: 12px; }
+    .cnt-btn { width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 18px; font-weight: bold; cursor: pointer; }
+    .inv-input { width: 80px; margin-bottom: 0; text-align: center; padding: 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <button class="back-btn" id="backBtn" onclick="goBack()">← Назад</button>
+    <h1 id="pageTitle">🎮 Клубный Портал</h1>
+    <div style="width: 60px;"></div>
+  </div>
+
+  <!-- Экран 0: Знакомство (1 раз) -->
+  <div id="screen-auth" class="screen">
+    <div class="list-item">
+      <h3>Представься, админ</h3>
+      <p style="margin-bottom: 12px;">Введи свое имя один раз, чтобы твои отчеты и инвентаризации подписывались автоматически.</p>
+      <input type="text" id="adminNameInput" placeholder="Например: Сардор">
+      <button class="btn" onclick="saveAdminName()">Продолжить</button>
+    </div>
+  </div>
+
+  <!-- Экран 1: Выбор клуба -->
+  <div id="screen-clubs" class="screen">
+    <p style="color: var(--text-muted); margin-bottom: 14px; font-size: 14px;">Выбери филиал:</p>
+    <div class="club-card" onclick="selectClub('Тушинская')">
+      <div>
+        <div style="font-weight: 700; font-size: 17px;">⚡ Клуб Тушинская</div>
+        <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Основной зал</div>
+      </div>
+      <span class="badge">Открыть →</span>
+    </div>
+    <div class="club-card disabled" onclick="tg.showAlert('Филиал на Сходненской пока в разработке')">
+      <div>
+        <div style="font-weight: 700; font-size: 17px;">🕹 Клуб Сходненская</div>
+        <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Скоро открытие</div>
+      </div>
+      <span class="badge" style="color: var(--text-muted); background: rgba(255,255,255,0.05);">Скоро</span>
+    </div>
+    
+    <div style="margin-top: 24px;">
+      <p style="color: var(--text-muted); margin-bottom: 10px; font-size: 14px;">👑 Управление</p>
+      <div class="club-card" style="border-color: rgba(0,168,255,0.4);" onclick="openScreen('owner', 'Меню Владельца')">
+        <div style="font-weight: 700; font-size: 16px;">📊 Панель Старшего / Владельца</div>
+        <span style="color: var(--accent);">→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Экран 2: Главное меню клуба -->
+  <div id="screen-menu" class="screen">
+    <div class="grid">
+      <div class="tile" onclick="openInfo('Кухня')"><span class="tile-icon">🍕</span><span class="tile-title">Кухня и рецепты</span></div>
+      <div class="tile" onclick="openInfo('Кальяны')"><span class="tile-icon">💨</span><span class="tile-title">Кальяны и забивки</span></div>
+      <div class="tile" onclick="openInfo('Пароли')"><span class="tile-icon">🔑</span><span class="tile-title">Пароли и коды</span></div>
+      <div class="tile" onclick="openSchedule()"><span class="tile-icon">📅</span><span class="tile-title">График смен</span></div>
+      <div class="tile" onclick="openTasks()"><span class="tile-icon">🧹</span><span class="tile-title">Задача на смену</span></div>
+      <div class="tile" onclick="openPhotos()"><span class="tile-icon">📸</span><span class="tile-title">Фотоотчеты</span></div>
+      <div class="tile" onclick="openInventory()"><span class="tile-icon">📦</span><span class="tile-title">Инвентаризация</span></div>
+      <div class="tile" onclick="openOrder()"><span class="tile-icon">🛒</span><span class="tile-title">Заявка поставщику</span></div>
+    </div>
+    <button class="btn btn-danger" style="margin-top: 16px;" onclick="openScreen('emergency', '🚨 Сообщить о ЧП')">🚨 ЧП / Поломка в клубе</button>
+  </div>
+
+  <!-- Экран 3: База знаний -->
+  <div id="screen-info" class="screen"><div id="infoContainer"></div></div>
+
+  <!-- Экран 4: График смен -->
+  <div id="screen-schedule" class="screen">
+    <div class="list-item" style="text-align: center;">
+      <p style="margin-bottom: 12px;">Актуальное расписание смен:</p>
+      <img id="scheduleImg" src="" style="width: 100%; border-radius: 10px; display: none;">
+      <p id="scheduleEmpty" style="color: var(--danger);">Ссылка на график не добавлена в таблицу (лист Настройки -> График)</p>
+    </div>
+  </div>
+
+  <!-- Экран 5: Задача на смену -->
+  <div id="screen-tasks" class="screen">
+    <div class="list-item">
+      <h3>Твоя зона на эту смену:</h3>
+      <p id="dailyTaskText" style="font-size: 16px; color: #fff; margin: 10px 0;">Загрузка...</p>
+      <p style="font-size: 13px;">Сделай уборку этой зоны и прикрепи фото результата:</p>
+      <input type="file" id="taskPhotoInput" accept="image/*" capture="environment" style="margin-top: 12px;">
+      <button class="btn" onclick="sendTaskPhoto()">Отправить фотоотчет по задаче</button>
+    </div>
+  </div>
+
+  <!-- Экран 6: Фотоотчеты + Сюрприз -->
+  <div id="screen-photos" class="screen">
+    <div class="list-item">
+      <h3>1. Админская зона</h3>
+      <input type="file" id="photoAdminZone" accept="image/*" capture="environment">
+      <button class="btn" onclick="uploadSinglePhoto('photoAdminZone', 'Админская зона')">Отправить фото админки</button>
+    </div>
+    <div class="list-item">
+      <h3>2. Бар и холодильники</h3>
+      <input type="file" id="photoBarZone" accept="image/*" capture="environment">
+      <button class="btn" onclick="uploadSinglePhoto('photoBarZone', 'Бар и холодильники')">Отправить фото бара</button>
+    </div>
+    <div class="list-item" style="border-color: var(--accent);">
+      <h3>3. 🎲 Сюрприз-проверка</h3>
+      <p id="surpriseZoneName" style="color: #fff; font-weight: 600; margin: 6px 0;">Определяем зону...</p>
+      <input type="file" id="photoSurpriseZone" accept="image/*" capture="environment">
+      <button class="btn" onclick="uploadSinglePhoto('photoSurpriseZone', document.getElementById('surpriseZoneName').innerText)">Отправить сюрприз-фото</button>
+    </div>
+  </div>
+
+  <!-- Экран 7: Слепая инвентаризация -->
+  <div id="screen-inventory" class="screen">
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">Впиши фактическое количество по факту пересчета. После отправки данные уйдут руководству.</p>
+    <div id="inventoryList"></div>
+    <button class="btn" onclick="submitInventory()">Сдать инвентаризацию</button>
+  </div>
+
+  <!-- Экран 8: Заявка поставщику -->
+  <div id="screen-order" class="screen">
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">Отметь позиции, которые заканчиваются:</p>
+    <div id="orderList"></div>
+    <button class="btn" onclick="submitOrder()">📦 Отправить заявку менеджеру</button>
+  </div>
+
+  <!-- Экран 9: ЧП / Поломка -->
+  <div id="screen-emergency" class="screen">
+    <div class="list-item">
+      <h3>Что сломалось или произошло?</h3>
+      <textarea id="emergencyText" rows="4" placeholder="Например: на 12 ПК отвалился интернет или потекла раковина..."></textarea>
+      <p style="margin-bottom: 8px; font-size: 13px;">Прикрепи фото (по возможности):</p>
+      <input type="file" id="emergencyPhoto" accept="image/*" capture="environment">
+      <button class="btn btn-danger" onclick="submitEmergency()">Отправить сигнал тревоги</button>
+    </div>
+  </div>
+
+  <!-- Экран 10: Панель Владельца -->
+  <div id="screen-owner" class="screen">
+    <div class="list-item">
+      <h3>📊 Логи и редактирование базы</h3>
+      <p style="margin-bottom: 12px;">Здесь хранятся все сданные инвентаризации, рецепты, пароли и список задач.</p>
+      <button class="btn" onclick="openGoogleSheet()">Открыть Google Таблицу</button>
+    </div>
+    <div class="list-item">
+      <h3>📢 Рассылка всем админам</h3>
+      <p style="margin-bottom: 10px;">Бот отправит это сообщение в личку всем сотрудникам, кто заходил в приложение.</p>
+      <textarea id="broadcastText" rows="3" placeholder="Текст объявления..."></textarea>
+      <button class="btn" onclick="sendBroadcast()">Отправить рассылку</button>
+    </div>
+  </div>
+
+  <script>
+    // ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ИЗ GOOGLE APPS SCRIPT
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMq4w4kEK_FilI2Tb4ng0-5je2_k8vUafpcTF91abaXi5ecZEwtlLpkKZh2WdaYwHF/execЫ';
+
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let appData = { info: [], items: [], tasks: [], settings: [] };
+    let historyStack = [];
+    let adminName = localStorage.getItem('club_admin_name') || '';
+    let orderCart = {};
+
+    window.onload = async () => {
+      if (!adminName) {
+        showScreen('auth', 'Авторизация');
+      } else {
+        showScreen('clubs', '🎮 Клубный Портал');
+      }
+      await loadData();
+    };
+
+    async function loadData() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        appData = await res.json();
+      } catch (e) {
+        console.error('Ошибка загрузки базы:', e);
+      }
+    }
+
+    function saveAdminName() {
+      const val = document.getElementById('adminNameInput').value.trim();
+      if (!val) return tg.showAlert('Введи свое имя!');
+      adminName = val;
+      localStorage.setItem('club_admin_name', adminName);
+      
+      const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'register', userId: userId, name: adminName })
+      });
+      showScreen('clubs', '🎮 Клубный Портал');
+    }
+
+    function showScreen(id, title) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + id).classList.add('active');
+      document.getElementById('pageTitle').innerText = title;
+      document.getElementById('backBtn').style.display = (id === 'clubs' || id === 'auth') ? 'none' : 'block';
+    }
+
+    function openScreen(id, title) {
+      const current = document.querySelector('.screen.active').id.replace('screen-', '');
+      historyStack.push({ id: current, title: document.getElementById('pageTitle').innerText });
+      showScreen(id, title);
+    }
+
+    function goBack() {
+      if (historyStack.length > 0) {
+        const prev = historyStack.pop();
+        showScreen(prev.id, prev.title);
+      } else {
+        showScreen('clubs', '🎮 Клубный Портал');
+      }
+    }
+
+    function selectClub(name) {
+      openScreen('menu', '⚡ ' + name);
+    }
+
+    function openInfo(category) {
+      openScreen('info', category);
+      const container = document.getElementById('infoContainer');
+      const filtered = appData.info.filter(i => i['Категория'] === category);
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="list-item"><p>В категории «${category}» пока пусто. Добавь строки в Google Таблицу на лист «Инфо».</p></div>`;
+        return;
+      }
+      container.innerHTML = filtered.map(item => `
+        <div class="list-item">
+          <h3>${item['Заголовок']}</h3>
+          <p>${item['Текст']}</p>
+        </div>
+      `).join('');
+    }
+
+    function openSchedule() {
+      openScreen('schedule', '📅 График смен');
+      const row = appData.settings.find(s => s['Ключ'] === 'График');
+      const img = document.getElementById('scheduleImg');
+      const empty = document.getElementById('scheduleEmpty');
+      if (row && row['Значение']) {
+        img.src = row['Значение'];
+        img.style.display = 'block';
+        empty.style.display = 'none';
+      }
+    }
+
+    function openTasks() {
+      openScreen('tasks', '🧹 Задача на смену');
+      const cleanTasks = appData.tasks.filter(t => t['Тип'] === 'Уборка');
+      const fallback = ['Протереть все мониторы и кронштейны', 'Вычистить поддон аэрогриля', 'Протереть холодильник внутри', 'Продуть ПК в VIP-зоне'];
+      const list = cleanTasks.length > 0 ? cleanTasks.map(t => t['Название']) : fallback;
+      const randomTask = list[Math.floor(Math.random() * list.length)];
+      document.getElementById('dailyTaskText').innerText = randomTask;
+    }
+
+    async function sendTaskPhoto() {
+      const zone = 'Задача: ' + document.getElementById('dailyTaskText').innerText;
+      await uploadSinglePhoto('taskPhotoInput', zone);
+    }
+
+    function openPhotos() {
+      openScreen('photos', '📸 Фотоотчеты');
+      const surpriseTasks = appData.tasks.filter(t => t['Тип'] === 'Сюрприз');
+      const fallback = ['Мусорка в санузле', 'Провода под столами в общем зале', 'Кальянная мойка', 'Микроволновка изнутри'];
+      const list = surpriseTasks.length > 0 ? surpriseTasks.map(t => t['Название']) : fallback;
+      document.getElementById('surpriseZoneName').innerText = list[Math.floor(Math.random() * list.length)];
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxW = 1000;
+            const scale = maxW / img.width;
+            canvas.width = img.width > maxW ? maxW : img.width;
+            canvas.height = img.width > maxW ? img.height * scale : img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadSinglePhoto(inputId, zoneName) {
+      const input = document.getElementById(inputId);
+      if (!input.files || !input.files[0]) return tg.showAlert('Сначала выбери или сделай фото!');
+      tg.MainButton.setText('Отправка фото...').show();
+      const base64 = await compressImage(input.files[0]);
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'photo_report', type: 'regular', adminName: adminName, zone: zoneName, photoBase64: base64 })
+      });
+      tg.MainButton.hide();
+      input.value = '';
+      tg.showAlert('✅ Фотоотчет отправлен!');
+    }
+
+    function openInventory() {
+      openScreen('inventory', '📦 Инвентаризация');
+      const container = document.getElementById('inventoryList');
+      if (appData.items.length === 0) {
+        container.innerHTML = '<div class="list-item"><p>Добавь товары на лист «Товары» в Google Таблице.</p></div>';
+        return;
+      }
+      container.innerHTML = appData.items.map((item, idx) => `
+        <div class="list-item row-flex">
+          <div>
+            <div style="font-weight: 600;">${item['Название']}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">${item['Категория']}</div>
+          </div>
+          <input type="number" class="inv-input" id="inv_${idx}" placeholder="0" min="0">
+        </div>
+      `).join('');
+    }
+
+    async function submitInventory() {
+      const results = [];
+      appData.items.forEach((item, idx) => {
+        const val = document.getElementById('inv_' + idx).value;
+        if (val !== '') results.push({ name: item['Название'], count: Number(val) });
+      });
+      if (results.length === 0) return tg.showAlert('Заполни хотя бы одну позицию!');
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'inventory', adminName: adminName, items: results })
+      });
+      tg.showAlert('✅ Инвентаризация сдана и записана в закрытый лог!');
+      goBack();
+    }
+
+    function openOrder() {
+      openScreen('order', '🛒 Заявка поставщику');
+      orderCart = {};
+      const container = document.getElementById('orderList');
+      if (appData.items.length === 0) {
+        container.innerHTML = '<div class="list-item"><p>Добавь товары на лист «Товары» в Google Таблице.</p></div>';
+        return;
+      }
+      container.innerHTML = appData.items.map((item, idx) => `
+        <div class="list-item row-flex">
+          <div>
+            <div style="font-weight: 600;">${item['Название']}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">${item['Категория']}</div>
+          </div>
+          <div class="counter">
+            <button class="cnt-btn" onclick="changeQty(${idx}, -1)">-</button>
+            <span id="qty_${idx}" style="font-weight: 700; min-width: 20px; text-align: center;">0</span>
+            <button class="cnt-btn" onclick="changeQty(${idx}, 1)">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function changeQty(idx, delta) {
+      const name = appData.items[idx]['Название'];
+      orderCart[name] = Math.max(0, (orderCart[name] || 0) + delta);
+      document.getElementById('qty_' + idx).innerText = orderCart[name];
+    }
+
+    async function submitOrder() {
+      const list = Object.keys(orderCart).filter(k => orderCart[k] > 0).map(k => ({ name: k, qty: orderCart[k] }));
+      if (list.length === 0) return tg.showAlert('Выбери хотя бы один товар!');
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'order', adminName: adminName, items: list })
+      });
+      tg.showAlert('✅ Заявка отправлена в чат закупок!');
+      goBack();
+    }
+
+    async function submitEmergency() {
+      const comment = document.getElementById('emergencyText').value.trim();
+      const input = document.getElementById('emergencyPhoto');
+      if (!comment) return tg.showAlert('Опиши проблему!');
+      let base64 = '';
+      if (input.files && input.files[0]) {
+        base64 = await compressImage(input.files[0]);
+      }
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'photo_report', type: 'emergency', adminName: adminName, comment: comment, photoBase64: base64 })
+      });
+      tg.showAlert('🚨 Сообщение о поломке отправлено руководству!');
+      document.getElementById('emergencyText').value = '';
+      input.value = '';
+      goBack();
+    }
+
+    function openGoogleSheet() {
+      const row = appData.settings.find(s => s['Ключ'] === 'Таблица');
+      if (row && row['Значение']) {
+        tg.openLink(row['Значение']);
+      } else {
+        tg.showAlert('Добавь ссылку на таблицу в лист Настройки (Ключ: Таблица)');
+      }
+    }
+
+    async function sendBroadcast() {
+      const text = document.getElementById('broadcastText').value.trim();
+      if (!text) return tg.showAlert('Введи текст рассылки!');
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'broadcast', text: text })
+      });
+      tg.showAlert('✅ Рассылка отправлена всем админам!');
+      document.getElementById('broadcastText').value = '';
+    }
+  </script>
+</body>
+</html>
