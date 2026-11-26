@@ -6,61 +6,75 @@
   <title>GoodGame Portal</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    :root { --bg: #080b14; --card: #111629; --card-active: #171f3b; --border: #1e2847; --sticker-blue: #2563eb; --accent: #38bdf8; --accent-glow: rgba(56, 189, 248, 0.16); --text: #f8fafc; --muted: #8292b2; --danger: #f43f5e; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--bg) radial-gradient(circle at 85% 0%, rgba(37, 99, 235, 0.22) 0%, rgba(8, 11, 20, 0) 55%) fixed; color: var(--text); padding: 16px; padding-bottom: 44px; -webkit-tap-highlight-color: transparent; user-select: none; }
-    .gg-banner { background: linear-gradient(135deg, #131a33 0%, #0d1224 100%); border: 1px solid var(--border); border-radius: 18px; padding: 18px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
-    .gg-stickers { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; transform: rotate(-3deg); }
-    .gg-tag { background: var(--sticker-blue); color: #fff; font-weight: 900; font-size: 13px; letter-spacing: 0.8px; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5); }
-    .gg-tag.sub { font-size: 11px; margin-left: 12px; background: #1d4ed8; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; min-height: 38px; }
-    .header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
-    .back-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px; transition: 0.12s; }
-    .back-btn:active { transform: scale(0.93); background: var(--card-active); }
-    .screen { display: none; animation: slideUp 0.2s ease; }
+    <style>
+    :root {
+      --bg: #070709;
+      --card: #111115;
+      --card-active: #18181f;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(168, 85, 247, 0.35);
+      --sticker-blue: #7c3aed;
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.12);
+      --text: #fafafa;
+      --muted: #71717a;
+      --danger: #f43f5e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 48px; -webkit-tap-highlight-color: transparent; user-select: none; }
+    .gg-banner { background: linear-gradient(180deg, #141419 0%, #0d0d11 100%); border: 1px solid var(--border); border-radius: 22px; padding: 18px; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; }
+    .gg-stickers { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; transform: rotate(-2deg); }
+    .gg-tag { background: linear-gradient(135deg, #9333ea 0%, #6d28d9 100%); color: #fff; font-weight: 800; font-size: 12px; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; box-shadow: 0 4px 16px rgba(147, 51, 234, 0.35); }
+    .gg-tag.sub { font-size: 10px; margin-left: 10px; background: #1e1b2e; color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); box-shadow: none; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; min-height: 36px; }
+    .header-title { font-size: 17px; font-weight: 700; letter-spacing: -0.4px; }
+    .back-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 7px 13px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 5px; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.15s; }
+    .back-btn:active { transform: scale(0.94); background: var(--card-active); }
+    .screen { display: none; animation: fadeIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }
     .screen.active { display: block; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .section-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .tile { background: linear-gradient(180deg, #13192e 0%, #0f1426 100%); border: 1px solid var(--border); border-radius: 18px; padding: 22px 14px 16px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; gap: 12px; cursor: pointer; min-height: 142px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25); transition: 0.12s; }
-    .tile:active { transform: scale(0.94); border-color: var(--accent); background: var(--card-active); box-shadow: 0 0 20px rgba(56, 189, 248, 0.25); }
-    .tile-icon-wrap { width: 48px; height: 48px; border-radius: 14px; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; color: var(--accent); }
-    .tile-icon-wrap i { width: 24px; height: 24px; stroke-width: 2; }
-    .tile-title { font-size: 14px; font-weight: 700; line-height: 1.25; color: var(--text); }
-    .tile-arrow { color: var(--muted); width: 16px; height: 16px; opacity: 0.7; }
-    .club-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.12s; }
-    .club-card:active { transform: scale(0.96); border-color: var(--accent); background: var(--card-active); }
-    .club-card.disabled { opacity: 0.45; cursor: not-allowed; }
-    .club-icon-box { width: 44px; height: 44px; border-radius: 13px; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; color: var(--accent); }
-    .badge { background: rgba(255, 255, 255, 0.06); color: var(--muted); padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    input, textarea { width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; border-radius: 14px; font-size: 15px; margin-bottom: 12px; outline: none; }
-    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
-    .btn { width: 100%; background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%); color: #fff; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35); transition: 0.1s; }
-    .btn:active { transform: scale(0.96); opacity: 0.9; }
-    .btn:disabled { opacity: 0.5; pointer-events: none; }
-    .btn-success { background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3); }
-    .btn-danger { background: rgba(244, 63, 94, 0.12); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.35); box-shadow: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .section-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tile { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 22px 14px 16px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; gap: 10px; cursor: pointer; min-height: 136px; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.15s, background 0.15s; }
+    .tile:active { transform: scale(0.95); border-color: var(--border-hover); background: var(--card-active); }
+    .tile-icon-wrap { width: 34px; height: 34px; border-radius: 10px; background: transparent; display: flex; align-items: center; justify-content: center; color: var(--accent); }
+    .tile-icon-wrap i { width: 22px; height: 22px; stroke-width: 1.8; }
+    .tile-title { font-size: 13.5px; font-weight: 600; line-height: 1.3; letter-spacing: -0.2px; color: var(--text); }
+    .tile-arrow { color: var(--accent); width: 14px; height: 14px; opacity: 0.65; }
+    .club-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.15s; }
+    .club-card:active { transform: scale(0.97); border-color: var(--border-hover); background: var(--card-active); }
+    .club-card.disabled { opacity: 0.4; cursor: not-allowed; }
+    .club-icon-box { width: 38px; height: 38px; border-radius: 12px; background: var(--accent-glow); display: flex; align-items: center; justify-content: center; color: var(--accent); }
+    .club-icon-box i { width: 19px; height: 19px; stroke-width: 1.9; }
+    .badge { background: rgba(255, 255, 255, 0.05); color: var(--muted); padding: 4px 9px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, textarea { width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; border-radius: 16px; font-size: 15px; margin-bottom: 12px; outline: none; transition: border-color 0.15s; }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    .btn { width: 100%; background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); color: #fff; border: none; padding: 15px; border-radius: 16px; font-size: 15px; font-weight: 600; letter-spacing: -0.2px; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.12s, opacity 0.12s; }
+    .btn:active { transform: scale(0.97); opacity: 0.9; }
+    .btn:disabled { opacity: 0.45; pointer-events: none; }
+    .btn-success { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); }
+    .btn-danger { background: rgba(244, 63, 94, 0.08); color: var(--danger); border: 1px solid rgba(244, 63, 94, 0.22); }
     .search-box { position: relative; margin-bottom: 10px; }
-    .search-box input { padding-left: 42px; margin-bottom: 0; }
-    .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 18px; height: 18px; }
-    .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 6px; scrollbar-width: none; }
+    .search-box input { padding-left: 40px; margin-bottom: 0; }
+    .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 16px; height: 16px; }
+    .cat-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 6px; scrollbar-width: none; }
     .cat-tabs::-webkit-scrollbar { display: none; }
-    .cat-tab { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.15s; }
-    .cat-tab.active { background: var(--sticker-blue); border-color: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); }
-    .card-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .card-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .card-box p { font-size: 14px; color: var(--muted); white-space: pre-line; line-height: 1.45; }
-    .inv-row { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .cat-tab { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 7px 13px; border-radius: 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.15s; }
+    .cat-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .card-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+    .card-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-box h3 i { width: 17px; height: 17px; color: var(--accent); }
+    .card-box p { font-size: 13.5px; color: var(--muted); white-space: pre-line; line-height: 1.45; }
+    .inv-row { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .inv-inputs { display: flex; gap: 8px; }
     .inv-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .inv-col span { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-    .inv-num { width: 64px; margin-bottom: 0; text-align: center; padding: 10px 4px; font-weight: 700; border-radius: 10px; font-size: 15px; }
-    .order-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.12s; }
-    .order-item:active { transform: scale(0.96); }
-    .order-item.selected { border-color: var(--accent); background: rgba(37, 99, 235, 0.16); }
-    .check-circle { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; color: transparent; }
-    .order-item.selected .check-circle { border-color: var(--accent); background: var(--accent); color: #080b14; }
+    .inv-col span { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+    .inv-num { width: 62px; margin-bottom: 0; text-align: center; padding: 9px 4px; font-weight: 700; border-radius: 12px; font-size: 14px; background: #09090b; }
+    .order-item { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.12s; }
+    .order-item:active { transform: scale(0.97); }
+    .order-item.selected { border-color: var(--accent); background: rgba(168, 85, 247, 0.12); }
+    .check-circle { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; color: transparent; }
+    .order-item.selected .check-circle { border-color: var(--accent); background: var(--accent); color: #fff; }
   </style>
 </head>
 <body>
@@ -126,7 +140,7 @@
       <div class="tile" onclick="openSchedule()"><div class="tile-icon-wrap"><i data-lucide="calendar-days"></i></div><span class="tile-title">График<br>смен</span><i data-lucide="arrow-right" class="tile-arrow"></i></div>
       <div class="tile" onclick="openTasks()"><div class="tile-icon-wrap"><i data-lucide="clipboard-check"></i></div><span class="tile-title">Задачи<br>Клуба</span><i data-lucide="arrow-right" class="tile-arrow"></i></div>
       <div class="tile" onclick="openPhotos()"><div class="tile-icon-wrap"><i data-lucide="camera"></i></div><span class="tile-title">Фото<br>Отчеты</span><i data-lucide="arrow-right" class="tile-arrow"></i></div>
-      <div class="tile" onclick="openInventory()"><div class="tile-icon-wrap"><i data-lucide="boxes"></i></div><span class="tile-title">Склад и<br>ревизия</span><i data-lucide="arrow-right" class="tile-arrow"></i></div>
+      <div class="tile" onclick="openInventory()"><div class="tile-icon-wrap"><i data-lucide="boxes"></i></div><span class="tile-title">Инвентаризация</span><i data-lucide="arrow-right" class="tile-arrow"></i></div>
       <div class="tile" onclick="openOrder()"><div class="tile-icon-wrap"><i data-lucide="shopping-bag"></i></div><span class="tile-title">Заявка<br>поставщику</span><i data-lucide="arrow-right" class="tile-arrow"></i></div>
     </div>
     <button class="btn btn-danger" style="margin-top: 16px;" onclick="openScreen('emergency', 'Сообщить о ЧП')"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> Сообщить о поломке / ЧП</button>
@@ -171,6 +185,9 @@
   </div>
 
   <div id="screen-inventory" class="screen">
+  <div id="screen-inventory" class="screen">
+    <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.4;">Укажи фактическое количество товара на складе и сверь с остатком в Langame. Пустые позиции не учитываются.</p>
+    <div class="search-box"><i data-lucide="search"></i><input type="text" id="invSearch" placeholder="Поиск товара..." oninput="renderInventory()"></div>
     <div class="search-box"><i data-lucide="search"></i><input type="text" id="invSearch" placeholder="Поиск товара..." oninput="renderInventory()"></div>
     <div class="cat-tabs" id="invCats"></div>
     <div id="inventoryList"></div>
@@ -178,6 +195,9 @@
   </div>
 
   <div id="screen-order" class="screen">
+    <div id="screen-order" class="screen">
+    <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.4;">Отметь галочками позиции, которые заканчиваются — список сразу улетит менеджеру.</p>
+    <div class="search-box"><i data-lucide="search"></i><input type="text" id="orderSearch" placeholder="Поиск товара..." oninput="renderOrder()"></div>
     <div class="search-box"><i data-lucide="search"></i><input type="text" id="orderSearch" placeholder="Поиск товара..." oninput="renderOrder()"></div>
     <div class="cat-tabs" id="orderCats"></div>
     <div id="orderList"></div>
@@ -211,8 +231,8 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMq4w4kEK_FilI2Tb4ng0-5je2_k8vUafpcTF91abaXi5ecZEwtlLpkKZh2WdaYwHF/exec';
     const tg = window.Telegram.WebApp;
     tg.expand();
-    tg.setHeaderColor('#080b14');
-    tg.setBackgroundColor('#080b14');
+    tg.setHeaderColor('#070709');
+    tg.setBackgroundColor('#070709');
     lucide.createIcons();
 
     let appData = { info: [], items: [], tasks: [], settings: [] };
