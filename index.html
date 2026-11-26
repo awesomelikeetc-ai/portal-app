@@ -13,9 +13,9 @@
       --card-active: #18181f;
       --border: rgba(255, 255, 255, 0.06);
       --border-hover: rgba(168, 85, 247, 0.35);
-      --sticker-blue: #7c3aed;
-      --accent: #a855f7;
-      --accent-glow: rgba(168, 85, 247, 0.12);
+      --sticker-blue: #2563eb;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.12);
       --text: #fafafa;
       --muted: #71717a;
       --danger: #f43f5e;
@@ -185,19 +185,14 @@
   </div>
 
   <div id="screen-inventory" class="screen">
-  <div id="screen-inventory" class="screen">
     <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.4;">Укажи фактическое количество товара на складе и сверь с остатком в Langame. Пустые позиции не учитываются.</p>
-    <div class="search-box"><i data-lucide="search"></i><input type="text" id="invSearch" placeholder="Поиск товара..." oninput="renderInventory()"></div>
     <div class="search-box"><i data-lucide="search"></i><input type="text" id="invSearch" placeholder="Поиск товара..." oninput="renderInventory()"></div>
     <div class="cat-tabs" id="invCats"></div>
     <div id="inventoryList"></div>
     <button class="btn btn-success" id="btnSubmitInv" onclick="submitInventory()"><i data-lucide="check-circle" style="width:18px;height:18px;"></i> Сдать инвентаризацию</button>
   </div>
-
   <div id="screen-order" class="screen">
-    <div id="screen-order" class="screen">
     <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.4;">Отметь галочками позиции, которые заканчиваются — список сразу улетит менеджеру.</p>
-    <div class="search-box"><i data-lucide="search"></i><input type="text" id="orderSearch" placeholder="Поиск товара..." oninput="renderOrder()"></div>
     <div class="search-box"><i data-lucide="search"></i><input type="text" id="orderSearch" placeholder="Поиск товара..." oninput="renderOrder()"></div>
     <div class="cat-tabs" id="orderCats"></div>
     <div id="orderList"></div>
