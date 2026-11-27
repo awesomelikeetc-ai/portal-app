@@ -145,7 +145,11 @@
     </div>
     <button class="btn btn-danger" style="margin-top: 16px;" onclick="openScreen('emergency', 'Сообщить о ЧП')"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i> Сообщить о поломке / ЧП</button>
   </div>
-  <div id="screen-info" class="screen"><div id="infoContainer"></div></div>
+    <div id="screen-info" class="screen">
+    <div class="search-box"><i data-lucide="search"></i><input type="text" id="infoSearch" placeholder="Поиск по разделу..." oninput="renderInfoList()"></div>
+    <div class="cat-tabs" id="infoSubCats"></div>
+    <div id="infoContainer"></div>
+  </div>
 
   <div id="screen-schedule" class="screen">
     <div class="card-box" style="text-align: center;">
@@ -293,11 +297,45 @@
 
     function selectClub(name) { openScreen('menu', name); }
 
+    let currentInfoCat = '';
+    let activeInfoSubCat = 'FAQ';
+
     function openInfo(category) {
       openScreen('info', category);
+      currentInfoCat = category;
+      activeInfoSubCat = 'FAQ';
+      document.getElementById('infoSearch').value = '';
+      renderInfoSubCats();
+      renderInfoList();
+    }
+
+    function renderInfoSubCats() {
+      const items = appData.info.filter(i => i['Категория'] === currentInfoCat);
+      const subs = new Set(['FAQ']);
+      items.forEach(i => { if (i['Подкатегория']) subs.add(String(i['Подкатегория']).trim()); });
+      const tabsEl = document.getElementById('infoSubCats');
+      if (subs.size <= 1) { tabsEl.innerHTML = ''; return; }
+      tabsEl.innerHTML = Array.from(subs).map(s => `<div class="cat-tab ${s === activeInfoSubCat ? 'active' : ''}" onclick="setInfoSubCat('${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
+    }
+
+    function setInfoSubCat(sub) {
+      haptic('light');
+      activeInfoSubCat = sub;
+      renderInfoSubCats();
+      renderInfoList();
+    }
+
+    function renderInfoList() {
       const container = document.getElementById('infoContainer');
-      const filtered = appData.info.filter(i => i['Категория'] === category);
-      if (filtered.length === 0) { container.innerHTML = `<div class="card-box"><p>В разделе «${category}» пока пусто.</p></div>`; return; }
+      const query = document.getElementById('infoSearch').value.toLowerCase().trim();
+      const filtered = appData.info.filter(item => {
+        if (item['Категория'] !== currentInfoCat) return false;
+        const sub = item['Подкатегория'] ? String(item['Подкатегория']).trim() : 'FAQ';
+        const matchSub = query ? true : (sub === activeInfoSubCat);
+        const matchQuery = !query || String(item['Заголовок']).toLowerCase().includes(query) || String(item['Текст']).toLowerCase().includes(query);
+        return matchSub && matchQuery;
+      });
+      if (filtered.length === 0) { container.innerHTML = `<div class="card-box"><p>В этом разделе пока пусто.</p></div>`; return; }
       container.innerHTML = filtered.map(item => `<div class="card-box"><h3>${item['Заголовок']}</h3><p>${item['Текст']}</p></div>`).join('');
     }
 
