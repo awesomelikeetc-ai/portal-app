@@ -41,6 +41,9 @@
     .tile-icon-wrap i { width: 22px; height: 22px; stroke-width: 1.8; }
     .tile-title { font-size: 13.5px; font-weight: 600; line-height: 1.3; letter-spacing: -0.2px; color: var(--text); }
     .tile-arrow { color: var(--accent); width: 14px; height: 14px; opacity: 0.65; }
+    #screen-menu .tile-icon-wrap { color: #e4e4e7; }
+    #screen-menu .tile-arrow { color: #71717a; opacity: 0.7; }
+    #screen-menu .tile:active { border-color: rgba(255, 255, 255, 0.25); }
     .club-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.15s; }
     .club-card:active { transform: scale(0.97); border-color: var(--border-hover); background: var(--card-active); }
     .club-card.disabled { opacity: 0.4; cursor: not-allowed; }
@@ -122,7 +125,7 @@
     </div>
     <div style="margin-top: 26px;">
       <div class="section-label"><i data-lucide="crown" style="width:14px;height:14px;color:var(--accent);"></i> Управление</div>
-      <div class="club-card" style="border-color: rgba(56, 189, 248, 0.35);" onclick="openScreen('owner', 'Меню Владельца')">
+      <div class="club-card" style="border-color: rgba(56, 189, 248, 0.35);" onclick="openOwnerPanel()">
         <div style="display: flex; align-items: center; gap: 14px;">
           <div class="club-icon-box"><i data-lucide="bar-chart-3"></i></div>
           <div style="font-weight: 700; font-size: 16px;">Меню Владельца</div>
@@ -523,6 +526,20 @@
       haptic('success');
       tg.showAlert('Рассылка отправлена всем админам!');
       document.getElementById('broadcastText').value = '';
+    }
+      function openOwnerPanel() {
+      const pinRow = appData.settings.find(s => s['Ключ'] === 'ПинВладельца');
+      const requiredPin = pinRow ? String(pinRow['Значение']).trim() : '';
+      if (!requiredPin) { openScreen('owner', 'Меню Владельцев'); return; }
+      const entered = prompt('Введите ПИН-код владельца:');
+      if (entered === null) return;
+      if (entered.trim() === requiredPin) {
+        haptic('success');
+        openScreen('owner', 'Меню Владельцев');
+      } else {
+        haptic('error');
+        tg.showAlert('❌ Неверный ПИН-код');
+      }
     }
   </script>
 </body>
